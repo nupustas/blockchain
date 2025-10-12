@@ -30,3 +30,32 @@ string hashas(const std::string &input) {
     return of.str();
 }
 
+int generateAmount()
+{
+    return 100 + rand() % (1000000 - 100 + 1);
+}
+
+string generateName()
+{
+    string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+    string result = Names[rand()%50];
+    
+    for (int i = 0; i < rand()%10; i++) {
+        int randomIndex = rand() % chars.length();  
+        result += chars[randomIndex];
+    }
+
+    return result;
+}
+
+const string Names[50] = {
+    "Andrius", "Dainius", "Jonas" , "Marius", "Orestas", "Povilas", 
+    "Aidas",  "Tomas",  "Vejas", "Zygimantas",  "Vaidotas",
+    "Linas", "Kestutis", "Vaidotas", "Martynas",   "Gintaras",
+     "Tomas", "Antanas", "Paulius",   "Jonas",  "Mantas", 
+     "Mindaugas", "Rokas", "Lukas", "Kazimieras", "Egle", "Indre", 
+     "Lina","Neringa","Sigute","Ugne","Laura","Viktorija",
+    "Rasa","Gintare","Agne","Ieva", "Milda","Margarita","Aiste", "Vilma",
+    "Ruta","Aiste","Gabija","Jurate","Jurgita", "Vaiva", "Ula", "Greta",
+    "Kotryna"
+};
