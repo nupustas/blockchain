@@ -1,3 +1,6 @@
+#ifndef FUNCTIONS_H
+#define FUNCTIONS_H
+
 #include "manolib.h"
 
 string hashas(const std::string &input) {
@@ -30,7 +33,7 @@ string hashas(const std::string &input) {
     return of.str();
 }
 
-int generateAmount()
+double generateAmount()
 {
     return 100 + rand() % (1000000 - 100 + 1);
 }
@@ -38,9 +41,10 @@ int generateAmount()
 string generateName()
 {
     string chars = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
-    string result = Names[rand()%50];
+    string result = Names[rand() % 50];
+    int x= rand()%20;
     
-    for (int i = 0; i < rand()%10; i++) {
+    for (int i = 0; i < x; i++) {
         int randomIndex = rand() % chars.length();  
         result += chars[randomIndex];
     }
@@ -48,14 +52,4 @@ string generateName()
     return result;
 }
 
-const string Names[50] = {
-    "Andrius", "Dainius", "Jonas" , "Marius", "Orestas", "Povilas", 
-    "Aidas",  "Tomas",  "Vejas", "Zygimantas",  "Vaidotas",
-    "Linas", "Kestutis", "Vaidotas", "Martynas",   "Gintaras",
-     "Tomas", "Antanas", "Paulius",   "Jonas",  "Mantas", 
-     "Mindaugas", "Rokas", "Lukas", "Kazimieras", "Egle", "Indre", 
-     "Lina","Neringa","Sigute","Ugne","Laura","Viktorija",
-    "Rasa","Gintare","Agne","Ieva", "Milda","Margarita","Aiste", "Vilma",
-    "Ruta","Aiste","Gabija","Jurate","Jurgita", "Vaiva", "Ula", "Greta",
-    "Kotryna"
-};
+#endif

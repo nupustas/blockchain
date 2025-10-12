@@ -1,3 +1,6 @@
+#ifndef MANOLIB_H
+#define MANOLIB_H
+
 #include <iostream>
 #include <string>
 #include <iomanip>
@@ -14,4 +17,18 @@
 
 using namespace std;
 
-string hashas(const std::string &input);
+
+const string Names[50] = {
+    "Andrius", "Dainius", "Jonas" , "Marius", "Orestas", "Povilas", 
+    "Aidas",  "Tomas",  "Vejas", "Zygimantas",  "Vaidotas",
+    "Linas", "Kestutis", "Vaidotas", "Martynas",   "Gintaras",
+     "Tomas", "Antanas", "Paulius",   "Jonas",  "Mantas", 
+     "Mindaugas", "Rokas", "Lukas", "Kazimieras", "Egle", "Indre", 
+     "Lina","Neringa","Sigute","Ugne","Laura","Viktorija",
+    "Rasa","Gintare","Agne","Ieva", "Milda","Margarita","Aiste", "Vilma",
+    "Ruta","Aiste","Gabija","Jurate","Jurgita", "Vaiva", "Ula", "Greta",
+    "Kotryna"
+};
+
+
+#endif
