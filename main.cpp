@@ -2,28 +2,64 @@
 #include "user.h"
 #include "transaction.h"
 #include "functions.h"
+#include "block.h"
+
 
 int main()
 {
 srand(static_cast<unsigned int>(time(0)));
 
-std::vector<User> users;
-
-//generate users
-for (int i = 0; i < 1000; ++i) {
-	string name = generateName();
-	double balance = generateAmount();
-	string public_key = hashas(name);
-
-	users.push_back(User(name, balance, public_key));
-}
+vector<User> users;
+vector<Transaction> transactions;
+vector<Block> blocks;
 
 
-for (size_t i = 0; i < users.size() && i < 100; ++i) {
-	cout << i+1 << ") Name: " << users[i].getName()
-		 << ", Balance: " << users[i].getBalance()
-		 << ", Public key: " << users[i].getPublic_key()<<endl;
-}
+	generateUsers(users);
 
-cout << "Total users generated: " << users.size() <<endl;
+	int numToCreate = 10000; 
+	int created = generateTransactions(users, transactions, numToCreate);
+	cout << "Total transactions generated: " << created << "\n";
+
+	 // mining setup
+    string prev_hash(64, '0'); // Genesis block previous hash (64 hex zeros)
+    int blockIndex = 0;
+    const size_t txPerBlock = 100;
+	cout<<"enter hash difficulty: ";
+    int difficulty = 1;   
+	cin>>difficulty;
+
+    // mining blocks
+    for (size_t offset = 0; offset < transactions.size(); offset += txPerBlock) {
+        size_t end = min(offset + txPerBlock, transactions.size());
+        vector<Transaction> batch(transactions.begin() + offset, transactions.begin() + end);
+
+        Block blk(blockIndex, prev_hash, batch, batch.size());
+
+        cout << "Mining block " << blockIndex
+                  << " with " << batch.size() << " transactions..." <<endl;
+
+        // timing
+        auto t0 = chrono::high_resolution_clock::now();
+        bool solved = blk.mine(difficulty);
+        auto t1 = chrono::high_resolution_clock::now();
+        chrono::duration<double> elapsed = t1 - t0;
+        // end timing 
+
+        cout << "\n========== Block " << blockIndex << " Result ==========\n";
+        cout << "Mined:       " << (solved ? "Success" : "Failed") << "\n";
+        cout << "Hash:        " << blk.getHash() << "\n";
+        cout << "Nonce:       " << blk.getNonce() << "\n";
+        cout << "ExtraNonce:  " << blk.getExtraNonce() << "\n";
+        cout << "Merkle Root: " << blk.getMerkleRoot() << "\n";
+        cout << "Time:        " << elapsed.count() << "s\n";
+        cout << "=================================================\n\n";
+
+        // push to chain and update prev hash
+        blocks.push_back(blk);
+        prev_hash = blk.getHash();
+        ++blockIndex;
+    }
+
+
+    return 0;
 }
