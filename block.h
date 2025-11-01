@@ -19,8 +19,8 @@ private:
 
 public:
     // construct a block from given transactions 
-    Block(int idx, const std::string &prev_hash, const std::vector<Transaction> &txs, size_t maxTx = 100)
-        : index(idx),
+    Block(int id, const std::string &prev_hash, const vector<Transaction> &txs, size_t maxTx = 100)
+        : index(id),
           previous_hash(prev_hash),
           nonce(0),
           extraNonce(0), 
@@ -31,19 +31,19 @@ public:
         transactions.assign(txs.begin(), txs.begin() + take);
 
         merkle_root = computeMerkleRoot(transactions);
-        block_hash = calculateHash();
+        block_hash = headerHash();
     }
 
     ~Block() = default;
 
     // merkle root of transactions to "block"
-    static string computeMerkleRoot(const std::vector<Transaction> &txs) {
+    static string computeMerkleRoot(const vector<Transaction> &txs) {
         if (txs.empty()) return hashas("");
 
-        std::vector<std::string> hashes;
+        vector<string> hashes;
         hashes.reserve(txs.size());
         for (const auto &tx : txs) {
-            std::ostringstream ss;
+            ostringstream ss;
             ss << tx.getTransaction_id() << tx.getSender() << tx.getReceiver() << tx.getAmount();
             hashes.push_back(hashas(ss.str()));
         }
@@ -64,7 +64,7 @@ public:
     }
 
     // block header hash
-    std::string calculateHash() const {
+    std::string headerHash() const {
         ostringstream ss;
         ss << previous_hash << merkle_root << timestamp << nonce << extraNonce << index;
         return hashas(ss.str());
@@ -78,7 +78,7 @@ public:
         const uint64_t MAX_NONCE = std::numeric_limits<uint64_t>::max();
 
         while (true) {
-            block_hash = calculateHash();
+            block_hash = headerHash();
 
             // check if hash starts with x zeros
             if (block_hash.rfind(target, 0) == 0) {
