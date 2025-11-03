@@ -5,6 +5,7 @@
 #include "manolib.h"
 #include "transaction.h"
 #include "functions.h"
+#include <limits>
 
 class Block {
 private:
@@ -16,6 +17,9 @@ private:
     uint64_t timestamp;
     std::vector<Transaction> transactions;
     std::string block_hash;
+    // last mining result info
+    bool lastSolved = false;
+    double lastMineTime = 0.0;
 
 public:
     // construct a block from given transactions 
@@ -70,30 +74,31 @@ public:
         return hashas(ss.str());
     }
 
-    // mine until hash meets difficulty 
+    // mine until hash meets difficulty
     bool mine(int difficulty) {
         if (difficulty < 0) difficulty = 0;
         string target(difficulty, '0');
-        int iter = 0;
         const uint64_t MAX_NONCE = std::numeric_limits<uint64_t>::max();
 
+        auto t0 = std::chrono::high_resolution_clock::now();
         while (true) {
             block_hash = headerHash();
 
             // check if hash starts with x zeros
             if (block_hash.rfind(target, 0) == 0) {
-                cout << "Block mined! "<< endl;
+                auto t1 = std::chrono::high_resolution_clock::now();
+                std::chrono::duration<double> elapsed = t1 - t0;
+                lastMineTime = elapsed.count();
+                lastSolved = true;
                 return true;
             }
 
             ++nonce;
-            ++iter;
 
             if (nonce >= MAX_NONCE) {
                 nonce = 0;
                 ++extraNonce;
             }
-
         }
     }
 
@@ -106,6 +111,21 @@ public:
     uint64_t getTimestamp() const { return timestamp; }
     const vector<Transaction> &getTransactions() const { return transactions; }
     int getIndex() const { return index; }
+    bool isLastSolved() const { return lastSolved; }
+    double getLastMineTime() const { return lastMineTime; }
 };
+
+// operator << for output
+inline ostream& operator<<(ostream& os, const Block &b) {
+    os << "\n========== Block " << b.getIndex() << " Result ==========" << "\n";
+    os << "Mined:       " << (b.isLastSolved() ? "Success" : "Failed") << "\n";
+    os << "Hash:        " << b.getHash() << "\n";
+    os << "Nonce:       " << b.getNonce() << "\n";
+    os << "ExtraNonce:  " << b.getExtraNonce() << "\n";
+    os << "Merkle Root: " << b.getMerkleRoot() << "\n";
+    os << "Time to mine:        " << b.getLastMineTime() << "s\n";
+    os << "=================================================\n\n";
+    return os;
+}
 
 #endif 

@@ -38,26 +38,14 @@ vector<Block> blocks;
         cout << "Mining block " << blockIndex
                   << " with " << batch.size() << " transactions..." <<endl;
 
-        // timing
-        auto t0 = chrono::high_resolution_clock::now();
+
         bool solved = blk.mine(difficulty);
-        auto t1 = chrono::high_resolution_clock::now();
-        chrono::duration<double> elapsed = t1 - t0;
-        // end timing 
 
-        cout << "\n========== Block " << blockIndex << " Result ==========\n";
-        cout << "Mined:       " << (solved ? "Success" : "Failed") << "\n";
-        cout << "Hash:        " << blk.getHash() << "\n";
-        cout << "Nonce:       " << blk.getNonce() << "\n";
-        cout << "ExtraNonce:  " << blk.getExtraNonce() << "\n";
-        cout << "Merkle Root: " << blk.getMerkleRoot() << "\n";
-        cout << "Time:        " << elapsed.count() << "s\n";
-        cout << "=================================================\n\n";
+    cout << blk;
 
-        // push to chain and update prev hash
-        blocks.push_back(blk);
-        prev_hash = blk.getHash();
-        ++blockIndex;
+    blocks.push_back(blk);
+    prev_hash = blk.getHash();
+    ++blockIndex;
     }
 
 
