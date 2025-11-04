@@ -6,17 +6,19 @@
 #include "transaction.h"
 #include "functions.h"
 #include <limits>
+#include "user.h"
+#include <algorithm>
 
 class Block {
 private:
     int index;
-    std::string previous_hash;
-    std::string merkle_root;
+    string previous_hash;
+    string merkle_root;
     uint64_t nonce;
     uint64_t extraNonce;   
     uint64_t timestamp;
-    std::vector<Transaction> transactions;
-    std::string block_hash;
+    vector<Transaction> transactions;
+    string block_hash;
     // last mining result info
     bool lastSolved = false;
     double lastMineTime = 0.0;
@@ -41,66 +43,66 @@ public:
     ~Block() = default;
 
     // merkle root of transactions to "block"
-    static string computeMerkleRoot(const vector<Transaction> &txs) {
-        if (txs.empty()) return hashas("");
+static string computeMerkleRoot(const vector<Transaction> &txs) {
+    if (txs.empty()) return hashas("");
 
-        vector<string> hashes;
-        hashes.reserve(txs.size());
-        for (const auto &tx : txs) {
-            ostringstream ss;
-            ss << tx.getTransaction_id() << tx.getSender() << tx.getReceiver() << tx.getAmount();
-            hashes.push_back(hashas(ss.str()));
-        }
-
-        while (hashes.size() > 1) {
-            if (hashes.size() % 2 == 1)
-                hashes.push_back(hashes.back()); // duplicate last if odd
-            vector<string> next;
-            next.reserve(hashes.size() / 2);
-            for (size_t i = 0; i < hashes.size(); i += 2) {
-                string concat = hashes[i] + hashes[i + 1];
-                next.push_back(hashas(concat));
-            }
-            hashes.swap(next);
-        }
-
-        return hashes.front();
-    }
-
-    // block header hash
-    std::string headerHash() const {
+    vector<string> hashes;
+    hashes.reserve(txs.size());
+    for (const auto &tx : txs) {
         ostringstream ss;
-        ss << previous_hash << merkle_root << timestamp << nonce << extraNonce << index;
-        return hashas(ss.str());
+        ss << tx.getTransaction_id() << tx.getSender() << tx.getReceiver() << tx.getAmount();
+        hashes.push_back(hashas(ss.str()));
     }
 
-    // mine until hash meets difficulty
-    bool mine(int difficulty) {
-        if (difficulty < 0) difficulty = 0;
-        string target(difficulty, '0');
-        const uint64_t MAX_NONCE = std::numeric_limits<uint64_t>::max();
+    while (hashes.size() > 1) {
+        if (hashes.size() % 2 == 1)
+            hashes.push_back(hashes.back()); // duplicate last if odd
+        vector<string> next;
+        next.reserve(hashes.size() / 2);
+        for (size_t i = 0; i < hashes.size(); i += 2) {
+            string concat = hashes[i] + hashes[i + 1];
+            next.push_back(hashas(concat));
+        }
+        hashes.swap(next);
+    }
 
-        auto t0 = std::chrono::high_resolution_clock::now();
-        while (true) {
-            block_hash = headerHash();
+    return hashes.front();
+}
 
-            // check if hash starts with x zeros
-            if (block_hash.rfind(target, 0) == 0) {
-                auto t1 = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double> elapsed = t1 - t0;
-                lastMineTime = elapsed.count();
-                lastSolved = true;
-                return true;
-            }
+// block header hash
+string headerHash() const {
+    ostringstream ss;
+    ss << previous_hash << timestamp << merkle_root << nonce << extraNonce << 4;
+    return hashas(ss.str());
+}
 
-            ++nonce;
+// mine until hash meets difficulty
+bool mine(int difficulty) {
+    if (difficulty < 0) difficulty = 0;
+    string target(difficulty, '0');
+    const uint64_t MAX_NONCE = std::numeric_limits<uint64_t>::max();
 
-            if (nonce >= MAX_NONCE) {
-                nonce = 0;
-                ++extraNonce;
-            }
+    auto t0 = std::chrono::high_resolution_clock::now();
+    while (true) {
+        block_hash = headerHash();
+
+        // check if hash starts with x zeros
+        if (block_hash.rfind(target, 0) == 0) {
+            auto t1 = std::chrono::high_resolution_clock::now();
+            std::chrono::duration<double> elapsed = t1 - t0;
+            lastMineTime = elapsed.count();
+            lastSolved = true;
+            return true;
+        }
+
+        ++nonce;
+
+        if (nonce >= MAX_NONCE) {
+            nonce = 0;
+            ++extraNonce;
         }
     }
+}
 
     // getters
     const string &getPreviousHash() const { return previous_hash; }
@@ -113,6 +115,46 @@ public:
     int getIndex() const { return index; }
     bool isLastSolved() const { return lastSolved; }
     double getLastMineTime() const { return lastMineTime; }
+
+    // Apply this block's transactions to the provided users vector.
+    // Uses only vector scans (no map). Returns applied transaction ids.
+vector<string> applyTransactions(vector<User> &users) {
+        vector<string> applied_ids;
+        applied_ids.reserve(transactions.size());
+
+        for (auto &tx : transactions) {
+            const string &skey = tx.getSender();
+            const string &rkey = tx.getReceiver();
+
+            // find sender index by linear scan
+            int sidx = -1;
+            int ridx = -1;
+            for (size_t i = 0; i < users.size(); ++i) {
+                if (users[i].getPublic_key() == skey) sidx = static_cast<int>(i);
+                if (users[i].getPublic_key() == rkey) ridx = static_cast<int>(i);
+                if (sidx != -1 && ridx != -1) break;
+            }
+
+            if (sidx == -1 || ridx == -1) {
+                tx.setVerified(false);
+                continue;
+            }
+
+            User &sender = users[static_cast<size_t>(sidx)];
+            User &receiver = users[static_cast<size_t>(ridx)];
+            double amount = tx.getAmount();
+            if (sender.getBalance() >= amount) {
+                sender.setBalance(sender.getBalance() - amount);
+                receiver.setBalance(receiver.getBalance() + amount);
+                tx.setVerified(true);
+                applied_ids.push_back(tx.getTransaction_id());
+            } else {
+                tx.setVerified(false);
+            }
+        }
+
+        return applied_ids;
+    }
 };
 
 // operator << for output
@@ -124,7 +166,7 @@ inline ostream& operator<<(ostream& os, const Block &b) {
     os << "ExtraNonce:  " << b.getExtraNonce() << "\n";
     os << "Merkle Root: " << b.getMerkleRoot() << "\n";
     os << "Time to mine:        " << b.getLastMineTime() << "s\n";
-    os << "=================================================\n\n";
+    os << "=================================================\n\n\n";
     return os;
 }
 

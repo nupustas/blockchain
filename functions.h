@@ -62,9 +62,8 @@ string generateName()
     return result;
 }
 
-int generateUsers(vector<User> &users){
-    const int target = 1000;
-    for (int i = 0; i < target; ++i) {
+int generateUsers(vector<User> &users, int Ucount){
+    for (int i = 0; i < Ucount; ++i) {
         string name = generateName();
         double balance = generateAmount();
         string public_key = hashas(name);
@@ -95,12 +94,9 @@ int generateTransactions(vector<User> &users, vector<Transaction> &transactions,
         if (senderBalance < 1.0) continue; // skip if no funds
 
         // choose amount: between 1 and min(senderBalance, some upper limit)
-        double maxTransfer = std::min(senderBalance, 100000.0);
+        double maxTransfer = senderBalance/3;
         double amount = 1 + (rand() % static_cast<int>(maxTransfer));
 
-        // update balances
-        //users[sender].setBalance(senderBalance - amount);
-        //users[receiver].setBalance(users[receiver].getBalance() + amount);
 
         // create transaction id from hash of senderkey+receiverkey+amount+time
         std::ostringstream idin;

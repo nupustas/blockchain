@@ -26,3 +26,12 @@ public:
     // setter
     void setVerified(bool v) { verified = v; }
 };
+inline ostream& operator<<(ostream& os, const Transaction &b) {
+    os << "Transaction ID:       " << b.getTransaction_id() << "\n";
+    os << "Sender:        " << b.getSender() << "\n";
+    os << "Receiver:       " << b.getReceiver() << "\n";
+    os << "Amount:       "     << b.getAmount()<<"\n";
+    os << "Verified?       "     << (b.isVerified() ? "yes" : "no") << "\n";
+    os << "=================================================\n\n\n";
+    return os;
+}
