@@ -1,5 +1,4 @@
-#ifndef FUNCTIONS_H
-#define FUNCTIONS_H
+#pragma once
 
 #include "manolib.h"
 
@@ -126,5 +125,3 @@ int generateTransactions(vector<User> &users, vector<Transaction> &transactions,
     return static_cast<int>(transactions.size());
 }
 
-
-#endif

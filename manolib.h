@@ -1,5 +1,4 @@
-#ifndef MANOLIB_H
-#define MANOLIB_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -31,4 +30,3 @@ const string Names[50] = {
 };
 
 
-#endif
