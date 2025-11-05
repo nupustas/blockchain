@@ -77,37 +77,57 @@ int generateUsers(vector<User> &users, int Ucount){
 
 int generateTransactions(vector<User> &users, vector<Transaction> &transactions, int numTransactions)
 {
-    if (users.size() < 2) return 0;
-
-    int created = 0;
+    int created =0;
     int n = static_cast<int>(users.size());
 
+    vector<double> tempBalances;// available user balances 
+    tempBalances.reserve(n);
+    for (const auto &u : users)
+        tempBalances.push_back(u.getBalance());
+
     for (int t = 0; t < numTransactions; ++t) {
-        // pick random sender and receiver
-        int sender = rand() % n;
-        int receiver = rand() % n;
-        if (receiver == sender) {
-            receiver = (sender + 1 + (rand() % (n-1))) % n;
+        // choose sender with enough funds
+        int sender = -1;
+        for (int attempts = 0; attempts < 10; ++attempts) {
+            int idx = rand() % n;
+            if (tempBalances[idx] > 1.0) { // require at least $1
+                sender = idx;
+                break;
+            }
         }
+        if (sender == -1) continue; // no valid sender found
 
-        double senderBalance = users[sender].getBalance();
-        if (senderBalance < 1.0) continue; // skip if no funds
+        // choose receiver different from sender
+        int receiver = rand() % n;
+        if (receiver == sender) receiver = (receiver + 1 + rand() % (n - 1)) % n;
 
-        // choose amount: between 1 and min(senderBalance, some upper limit)
-        double maxTransfer = senderBalance/3;
-        double amount = 1 + (rand() % static_cast<int>(maxTransfer));
+        double senderBalance = tempBalances[sender];
+        double maxTransfer = std::max(1.0, senderBalance / 2); // max 1/2 balance
+        double amount = (rand() % 1000) / 1000.0 * maxTransfer; 
+        if (amount < 1.0) amount = 1.0; // min 1.0
 
+        // "spend" from sender in temporary balance
+        tempBalances[sender] -= amount;
+        tempBalances[receiver] +=amount;
 
-        // create transaction id from hash of senderkey+receiverkey+amount+time
+        // create transaction id
         std::ostringstream idin;
-        idin << users[sender].getPublic_key() << users[receiver].getPublic_key() << amount << time(0) << t;
+        idin << users[sender].getPublic_key()
+             << users[receiver].getPublic_key()
+             << amount << time(0) << t;
         string txid = hashas(idin.str());
 
-        bool verified= false;
-        transactions.emplace_back(txid, users[sender].getPublic_key(), users[receiver].getPublic_key(), amount, verified);
+        transactions.emplace_back(
+            txid,
+            users[sender].getPublic_key(),
+            users[receiver].getPublic_key(),
+            amount,
+            false
+        );
         ++created;
     }
-return created;
+    return created;
 }
+
 
 #endif

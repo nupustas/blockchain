@@ -16,12 +16,12 @@ private:
     string merkle_root;
     uint64_t nonce;
     uint64_t extraNonce;   
-    uint64_t timestamp;
+    uint64_t timestamp; // block objekto sukurimo laikas
+    uint64_t blockMinedTime;
     vector<Transaction> transactions;
     string block_hash;
-    // last mining result info
-    bool lastSolved = false;
-    double lastMineTime = 0.0;
+
+    double mineTime = 0.0; // kiek laiko kasamas block
 
 public:
     // construct a block from given transactions 
@@ -90,8 +90,8 @@ bool mine(int difficulty) {
         if (block_hash.rfind(target, 0) == 0) {
             auto t1 = std::chrono::high_resolution_clock::now();
             std::chrono::duration<double> elapsed = t1 - t0;
-            lastMineTime = elapsed.count();
-            lastSolved = true;
+            mineTime = elapsed.count();
+            blockMinedTime = static_cast<uint64_t>(time(0));
             return true;
         }
 
@@ -111,13 +111,29 @@ bool mine(int difficulty) {
     uint64_t getNonce() const { return nonce; }
     uint64_t getExtraNonce() const { return extraNonce; }
     uint64_t getTimestamp() const { return timestamp; }
+    uint64_t getBlockMinedTime() const { return blockMinedTime; }
     const vector<Transaction> &getTransactions() const { return transactions; }
     int getIndex() const { return index; }
-    bool isLastSolved() const { return lastSolved; }
-    double getLastMineTime() const { return lastMineTime; }
+    double getMineTime() const { return mineTime; }
 
-    // Apply this block's transactions to the provided users vector.
-    // Uses only vector scans (no map). Returns applied transaction ids.
+    
+    // print transactions
+    void printTransaction(size_t x) const {
+        if (x >= transactions.size()) {
+            std::cout << "Transaction index out of range.\n";
+            return;
+        }
+        const auto &tx = transactions[x];
+        std::cout << "Transaction " << x << ":\n";
+        std::cout << "ID:       " << tx.getTransaction_id() << "\n";
+        std::cout << "Sender:   " << tx.getSender() << "\n";
+        std::cout << "Receiver: " << tx.getReceiver() << "\n";
+        std::cout << "Amount:   " << tx.getAmount() << "\n";
+        std::cout << "Verified: " << (tx.isVerified() ? "Yes" : "No") << "\n";
+        std::cout << "---------------------------\n";
+    }
+
+    // applies the blocks transactions after its mined
 vector<string> applyTransactions(vector<User> &users) {
         vector<string> applied_ids;
         applied_ids.reserve(transactions.size());
@@ -157,15 +173,20 @@ vector<string> applyTransactions(vector<User> &users) {
     }
 };
 
+
 // operator << for output
 inline ostream& operator<<(ostream& os, const Block &b) {
     os << "\n========== Block " << b.getIndex() << " Result ==========" << "\n";
-    os << "Mined:       " << (b.isLastSolved() ? "Success" : "Failed") << "\n";
     os << "Hash:        " << b.getHash() << "\n";
     os << "Nonce:       " << b.getNonce() << "\n";
     os << "ExtraNonce:  " << b.getExtraNonce() << "\n";
     os << "Merkle Root: " << b.getMerkleRoot() << "\n";
-    os << "Time to mine:        " << b.getLastMineTime() << "s\n";
+    os << "Time to mine block:        " << b.getMineTime() << "s\n";
+
+    if (b.getBlockMinedTime() != 0) {
+    time_t mined = static_cast<time_t>(b.getBlockMinedTime());
+    os << "Block mined at: " << std::put_time(std::localtime(&mined), "%Y-%m-%d %H:%M:%S") << "\n";} // AI
+
     os << "=================================================\n\n\n";
     return os;
 }
