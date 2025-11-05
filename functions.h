@@ -71,13 +71,11 @@ int generateUsers(vector<User> &users, int Ucount){
         users.push_back(User(name, balance, public_key));
     }
 
-    cout << "Total users generated: " << users.size() << endl;
     return static_cast<int>(users.size());
 }
 
 int generateTransactions(vector<User> &users, vector<Transaction> &transactions, int numTransactions)
 {
-    int created =0;
     int n = static_cast<int>(users.size());
 
     vector<double> tempBalances;// available user balances 
@@ -124,9 +122,8 @@ int generateTransactions(vector<User> &users, vector<Transaction> &transactions,
             amount,
             false
         );
-        ++created;
     }
-    return created;
+    return static_cast<int>(transactions.size());
 }
 
 
