@@ -6,8 +6,8 @@
 * Programa pradės kasimą (tik pirmi 10 blokų bus išvesti ekrane)
 * Baigus kasti visus blokus atsiras meniu, kuriuo galesite pažiūrėti betkurio bloko ar vartotojo duomenis
 
-![Bloko output](image.png)
-![Meniu](image2.png)
+![Bloko output](img/image.png)
+![Meniu](img/image2.png)
 
 ## Programos veikimas
 * Sugeneruojama atsitiktiniai 1000 vartotojų ir 10000 transakcijų:
