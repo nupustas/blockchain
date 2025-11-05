@@ -24,7 +24,7 @@ private:
 
 public:
     // construct a block from given transactions 
-    Block(int id, const string &prev_hash, const vector<Transaction> &txs, size_t maxTx = 100)
+    Block(int id, const string &prev_hash, const vector<Transaction> &txs, size_t maxTx)
         : index(id),
           previous_hash(prev_hash),
           nonce(0),
@@ -155,85 +155,6 @@ bool mine(int difficulty) {
     blockMinedTime = static_cast<uint64_t>(time(0));
 
     return mined;
-}
-
-// limited mining: try for up to maxSeconds or maxIterations and return whether found
-bool mineLimited(int difficulty, uint64_t maxIterations, double maxSeconds) {
-    if (difficulty < 0) difficulty = 0;
-    string target(difficulty, '0');
-    const uint64_t MAX_NONCE = numeric_limits<uint64_t>::max();
-
-    auto t0 = chrono::high_resolution_clock::now();
-
-    bool mined = false;
-    uint64_t foundNonce = 0;
-    uint64_t foundExtra = 0;
-    string foundHash;
-
-    int numThreads = 6; // tune as needed
-    omp_set_num_threads(numThreads);
-
-    uint64_t totalIterations = 0;
-
-    #pragma omp parallel shared(mined, foundNonce, foundExtra, foundHash, totalIterations)
-    {
-        unsigned int thread = omp_get_thread_num();
-        uint64_t localNonce = nonce + thread * 1000000;
-        uint64_t localExtra = extraNonce;
-
-        auto thread_t0 = chrono::high_resolution_clock::now();
-
-        while (!mined) {
-            // update shared nonce/extra for hash calculation
-            #pragma omp critical
-            {
-                nonce = localNonce;
-                extraNonce = localExtra;
-            }
-
-            string hashCandidate = headerHash();
-
-            if (hashCandidate.rfind(target, 0) == 0) {
-                #pragma omp critical
-                {
-                    if (!mined) {
-                        mined = true;
-                        foundNonce = localNonce;
-                        foundExtra = localExtra;
-                        foundHash = hashCandidate;
-                    }
-                }
-                break;
-            }
-
-            ++localNonce;
-            ++totalIterations;
-            if (localNonce >= MAX_NONCE) { localNonce = 0; ++localExtra; }
-
-            // check thread-local time and shared iteration/time limits
-            auto now = chrono::high_resolution_clock::now();
-            chrono::duration<double> sofar = now - thread_t0;
-            if (sofar.count() >= maxSeconds) break;
-            if (totalIterations >= maxIterations) break;
-        }
-    }
-
-    // commit if found
-    if (foundHash.size()) {
-        nonce = foundNonce;
-        extraNonce = foundExtra;
-        block_hash = foundHash;
-        auto t1 = chrono::high_resolution_clock::now();
-        chrono::duration<double> elapsed = t1 - t0;
-        mineTime = elapsed.count();
-        blockMinedTime = static_cast<uint64_t>(time(0));
-        return true;
-    } else {
-        auto t1 = chrono::high_resolution_clock::now();
-        chrono::duration<double> elapsed = t1 - t0;
-        mineTime = elapsed.count();
-        return false;
-    }
 }
 
     // getters
