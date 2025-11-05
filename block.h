@@ -25,7 +25,7 @@ private:
 
 public:
     // construct a block from given transactions 
-    Block(int id, const std::string &prev_hash, const vector<Transaction> &txs, size_t maxTx = 100)
+    Block(int id, const string &prev_hash, const vector<Transaction> &txs, size_t maxTx = 100)
         : index(id),
           previous_hash(prev_hash),
           nonce(0),
@@ -40,9 +40,27 @@ public:
         block_hash = headerHash();
     }
 
+    // genesis block constructor
+    Block()
+    : index(0),
+      previous_hash(string(64, '0')), // 64 zeros
+      nonce(0),
+      extraNonce(0),
+      timestamp(static_cast<uint64_t>(time(0))),
+      blockMinedTime(0),
+      mineTime(0.0)
+{
+    //genesis transaction
+    Transaction genesisTx("0", "SYSTEM", "ALL", 0.0, true);
+    transactions.push_back(genesisTx);
+
+    merkle_root = computeMerkleRoot(transactions);
+    block_hash = headerHash();
+}
+
     ~Block() = default;
 
-    // merkle root of transactions to "block"
+// merkle root of transactions to "block"
 static string computeMerkleRoot(const vector<Transaction> &txs) {
     if (txs.empty()) return hashas("");
 
@@ -82,14 +100,14 @@ bool mine(int difficulty) {
     string target(difficulty, '0');
     const uint64_t MAX_NONCE = std::numeric_limits<uint64_t>::max();
 
-    auto t0 = std::chrono::high_resolution_clock::now();
+    auto t0 = chrono::high_resolution_clock::now();
     while (true) {
         block_hash = headerHash();
 
         // check if hash starts with x zeros
         if (block_hash.rfind(target, 0) == 0) {
-            auto t1 = std::chrono::high_resolution_clock::now();
-            std::chrono::duration<double> elapsed = t1 - t0;
+            auto t1 = chrono::high_resolution_clock::now();
+            chrono::duration<double> elapsed = t1 - t0;
             mineTime = elapsed.count();
             blockMinedTime = static_cast<uint64_t>(time(0));
             return true;
@@ -133,16 +151,16 @@ bool mine(int difficulty) {
         std::cout << "---------------------------\n";
     }
 
-    // applies the blocks transactions after its mined
+// applies the blocks transactions after its mined
 vector<string> applyTransactions(vector<User> &users) {
-        vector<string> applied_ids;
-        applied_ids.reserve(transactions.size());
+        vector<string> applied;
+        applied.reserve(transactions.size());
 
         for (auto &tx : transactions) {
             const string &skey = tx.getSender();
             const string &rkey = tx.getReceiver();
 
-            // find sender index by linear scan
+            // find sender index
             int sidx = -1;
             int ridx = -1;
             for (size_t i = 0; i < users.size(); ++i) {
@@ -163,13 +181,13 @@ vector<string> applyTransactions(vector<User> &users) {
                 sender.setBalance(sender.getBalance() - amount);
                 receiver.setBalance(receiver.getBalance() + amount);
                 tx.setVerified(true);
-                applied_ids.push_back(tx.getTransaction_id());
+                applied.push_back(tx.getTransaction_id());
             } else {
                 tx.setVerified(false);
             }
         }
 
-        return applied_ids;
+        return applied;
     }
 };
 

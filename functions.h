@@ -3,8 +3,8 @@
 
 #include "manolib.h"
 
-string hashas(const std::string &input) {
-    std::array<uint64_t, 4> state = {
+string hashas(const string &input) {
+    array<uint64_t, 4> state = {
         0xabcdef1234567890ULL,
         0xfedcba9876543210ULL,
         0xa12b34c56d78e90fULL,

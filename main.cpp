@@ -3,9 +3,6 @@
 #include "transaction.h"
 #include "functions.h"
 #include "block.h"
-#include <algorithm>
-#include <limits>
-
 
 int main()
 {
@@ -25,13 +22,18 @@ generateTransactions(users, transactions, Tcount);
 cout << "Total transactions generated: " << transactions.size() << "\n";
 
 
-    // mining setup
-    string prev_hash(64, '0'); // Genesis block previous hash 64 zeros
-    int blockIndex = 0;
-    const size_t txPerBlock = 100;
-    const int difficulty = 4;   
-
-    const int printLimit = 10;
+//genesis block
+Block genesis;
+blocks.push_back(genesis);
+cout << "Genesis block created:\n" << genesis << "\n";
+string prev_hash = genesis.getHash();
+// mining setup
+int blockIndex = 1;
+const size_t txPerBlock = 100;
+int difficulty = 4;
+cout<<"Iveskite hasho sunkuma: ";
+cin>>difficulty;   
+const int printLimit = 10;
     // mining
 while (!transactions.empty()) {
     size_t take = min(txPerBlock, transactions.size());
@@ -50,8 +52,8 @@ while (!transactions.empty()) {
     }
 
     // apply block transactions
-    std::vector<std::string> applied_ids = blk.applyTransactions(users);
-    //cout << "Applied transactions to balances: " << applied_ids.size() << "\n";
+    vector<string> applied = blk.applyTransactions(users);
+    //cout << "Applied transactions to balances: " << applied.size() << "\n";
 
     // remove the batch we just included from the pending list (erase front)
     transactions.erase(transactions.begin(), transactions.begin() + take);
@@ -66,8 +68,7 @@ while (!transactions.empty()) {
         cout << "\nMenu:\n";
         cout << " 0 - Exit\n";
         cout << " 1 - View a block\n";
-        cout << " 2 - View a pending transaction\n";
-        cout << " 3 - View a user\n";
+        cout << " 2 - View a user\n";
         cout << "Choice: ";
 
         int choice = -1;
@@ -127,14 +128,6 @@ if (!block.getTransactions().empty()) {
 }
 
 if (choice == 2) {
-    cout << "Which pending transaction index? (0 - " << (transactions.empty() ? 0 : transactions.size()-1) << ")\n";
-    int idx; if (!(cin >> idx)) { cin.clear(); cin.ignore(numeric_limits<streamsize>::max(), '\n'); cout<<"Bad index\n"; continue; }
-    if (idx < 0 || static_cast<size_t>(idx) >= transactions.size()) { cout << "Transaction index out of range\n"; continue; }
-    cout << transactions[idx];
-    continue;
-}
-
-if (choice == 3) {
     cout << "Which user index? (0 - " << (users.empty() ? 0 : users.size()-1) << ")\n";
     int idx; if (!(cin >> idx)) { cin.clear(); cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n'); cout<<"Bad index\n"; continue; }
     if (idx < 0 || static_cast<size_t>(idx) >= users.size()) { cout << "User index out of range\n"; continue; }
