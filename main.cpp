@@ -3,6 +3,8 @@
 #include "transaction.h"
 #include "functions.h"
 #include "block.h"
+#include <omp.h>
+
 
 int main()
 {
@@ -27,12 +29,13 @@ Block genesis;
 blocks.push_back(genesis);
 cout << "Genesis block created:\n" << genesis << "\n";
 string prev_hash = genesis.getHash();
+
 // mining setup
-int blockIndex = 1;
-const size_t txPerBlock = 100;
 int difficulty = 4;
 cout<<"Iveskite hasho sunkuma: ";
 cin>>difficulty;   
+int blockIndex = 1;
+const size_t txPerBlock = 100;
 const int printLimit = 10;
     // mining
 while (!transactions.empty()) {
@@ -46,8 +49,7 @@ while (!transactions.empty()) {
     blk.mine(difficulty);
     // outputs only first 10 mined blocks
     if (blockIndex < printLimit) {
-        cout << "Mined block " << blockIndex 
-             << " with " << batch.size() << " transactions:";
+        cout << "Mined block " << blockIndex << " with " << batch.size() << " transactions:";
         cout << blk;
     }
 
